@@ -1,5 +1,5 @@
 package org.example.argumentparser;
 
-interface HasDefaultValue {
-    String getDefaultValue();
+interface HasDefaultValue<ValueType> {
+    ValueType getDefaultValue();
 }

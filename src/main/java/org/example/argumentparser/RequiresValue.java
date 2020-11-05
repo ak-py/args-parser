@@ -1,3 +1,3 @@
 package org.example.argumentparser;
 
-interface RequiresValue {}
+interface RequiresValue<ValueType> {}

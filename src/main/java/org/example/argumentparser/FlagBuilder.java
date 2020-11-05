@@ -2,8 +2,11 @@ package org.example.argumentparser;
 
 
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.util.function.Function.identity;
 
 public abstract class FlagBuilder {
 
@@ -54,8 +57,8 @@ public abstract class FlagBuilder {
             super(shortName, longName, description);
         }
 
-        public OptionalFlagWithValueBuilder requireValue() {
-            return new OptionalFlagWithValueBuilder(shortName, longName, description);
+        public OptionalFlagWithValueBuilder<String> requireValue() {
+            return new OptionalFlagWithValueBuilder<>(shortName, longName, description, identity());
         }
 
         public Flag.OptionalFlagWithoutValue build() {
@@ -68,62 +71,89 @@ public abstract class FlagBuilder {
         }
     }
 
-    public static class OptionalFlagWithValueBuilder extends FlagBuilder {
+    public static class OptionalFlagWithValueBuilder<ValueType> extends FlagBuilder {
+        private final Function<String, ValueType> converter;
 
-        private OptionalFlagWithValueBuilder(String shortName, Optional<String> longName, String description) {
+        private OptionalFlagWithValueBuilder(String shortName, Optional<String> longName, String description,
+                                             Function<String, ValueType> converter) {
             super(shortName, longName, description);
+            this.converter = converter;
         }
 
-        public  Flag.OptionalFlagWithValue build() {
-            return new Flag.OptionalFlagWithValue(shortName, longName, description);
+        public  Flag.OptionalFlagWithValue<ValueType> build() {
+            return new Flag.OptionalFlagWithValue<>(shortName, longName, description, converter);
         }
 
-        public OptionalFlagWithDefaultValueBuilder useDefaultValue(String defaultValue) {
-            return new OptionalFlagWithDefaultValueBuilder(shortName, longName, description, defaultValue);
+        public OptionalFlagWithDefaultValueBuilder<ValueType> useDefaultValue(ValueType defaultValue) {
+            return new OptionalFlagWithDefaultValueBuilder<>(shortName, longName, description, defaultValue, converter);
         }
 
-        public RequiredFlagWithValueBuilder mustAppear() {
-            return new RequiredFlagWithValueBuilder(shortName, longName, description);
+        public RequiredFlagWithValueBuilder<ValueType> mustAppear() {
+            return new RequiredFlagWithValueBuilder<>(shortName, longName, description, converter);
         }
 
-        public OptionalFlagWithValueBuilder useLongName(String longName) {
+        public OptionalFlagWithValueBuilder<ValueType> useLongName(String longName) {
             setLongName(longName);
             return this;
         }
+
+        public <NewValueType> OptionalFlagWithValueBuilder<NewValueType> useConverter(
+                Function<String, NewValueType> converter) {
+            return new OptionalFlagWithValueBuilder<>(shortName, longName, description, converter);
+        }
     }
 
-    public static class OptionalFlagWithDefaultValueBuilder extends FlagBuilder {
-        private final String defaultValue;
+    public static class OptionalFlagWithDefaultValueBuilder<ValueType> extends FlagBuilder {
+        private final ValueType defaultValue;
+        private final Function<String, ValueType> converter;
 
         private OptionalFlagWithDefaultValueBuilder(String shortName, Optional<String> longName,
-                                                    String description, String defaultValue) {
+                                                    String description, ValueType defaultValue,
+                                                    Function<String, ValueType> converter) {
             super(shortName, longName, description);
             this.defaultValue = defaultValue;
+            this.converter = converter;
         }
 
-        public Flag.OptionalFlagWithDefaultValue build() {
-            return new Flag.OptionalFlagWithDefaultValue(shortName, longName, description, defaultValue);
+        public Flag.OptionalFlagWithDefaultValue<ValueType> build() {
+            return new Flag.OptionalFlagWithDefaultValue<>(shortName, longName, description, defaultValue, converter);
         }
 
-        public OptionalFlagWithDefaultValueBuilder useLongName(String longName) {
+        public OptionalFlagWithDefaultValueBuilder<ValueType> useLongName(String longName) {
             setLongName(longName);
             return this;
         }
+
+        public <NewValueType> OptionalFlagWithDefaultValueBuilder<NewValueType> useConverterWithDefaultValue(
+                NewValueType newDefaultValue, Function<String, NewValueType> converter) {
+            return new OptionalFlagWithDefaultValueBuilder<>(shortName, longName, description, newDefaultValue, converter);
+
+        }
+
     }
 
-    public static class RequiredFlagWithValueBuilder extends FlagBuilder {
+    public static class RequiredFlagWithValueBuilder<ValueType> extends FlagBuilder {
 
-        private RequiredFlagWithValueBuilder(String shortName, Optional<String> longName, String description) {
+        private final Function<String, ValueType> converter;
+
+        private RequiredFlagWithValueBuilder(String shortName, Optional<String> longName, String description,
+                                             Function<String, ValueType> converter) {
             super(shortName, longName, description);
+            this.converter = converter;
         }
 
-        public Flag.RequiredFlagWithValue build() {
-            return new Flag.RequiredFlagWithValue(shortName, longName, description);
+        public Flag.RequiredFlagWithValue<ValueType> build() {
+            return new Flag.RequiredFlagWithValue<>(shortName, longName, description, converter);
         }
 
-        public RequiredFlagWithValueBuilder useLongName(String longName) {
+        public RequiredFlagWithValueBuilder<ValueType> useLongName(String longName) {
             setLongName(longName);
             return this;
+        }
+
+        public <NewValueType> RequiredFlagWithValueBuilder<NewValueType> useConverter(
+                Function<String, NewValueType> converter) {
+            return new RequiredFlagWithValueBuilder<>(shortName, longName, description, converter);
         }
 
     }

@@ -12,6 +12,12 @@ public class Main {
                 .mustAppear()
                 .build();
 
+        var age = FlagBuilder.newBuilder("-a", "Age of your pet.")
+                .useLongName("--age")
+                .requireValue()
+                .useConverter(Integer::parseInt)
+                .build();
+
         var dard = FlagBuilder.newBuilder("-d", "Darde.")
                 .useLongName("--dard")
                 .build();
@@ -32,7 +38,7 @@ public class Main {
 
         var parser = ArgumentParserBuilder.newBuilder("haddis")
                 .setProgramDescription("cool program")
-                .addFlags(certFile, dard, levi, frankie)
+                .addFlags(certFile, age, dard, levi, frankie)
                 .addPositionalArguments(src, dst)
                 .build();
 

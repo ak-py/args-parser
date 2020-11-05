@@ -1,6 +1,7 @@
 package org.example.argumentparser;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class Flag {
 
@@ -51,18 +52,22 @@ public abstract class Flag {
         return appeared;
     }
 
-    public static class RequiredFlagWithValue extends Flag implements RequiresValue, FlagMustAppear {
-        private Optional<String> value = Optional.empty();
+    public static class RequiredFlagWithValue<ValueType> extends Flag implements RequiresValue<ValueType>,
+            FlagMustAppear {
+        private final Function<String, ValueType> converter;
+        private Optional<ValueType> value = Optional.empty();
 
-        RequiredFlagWithValue(String shortName, Optional<String> longName, String description) {
+        RequiredFlagWithValue(String shortName, Optional<String> longName, String description,
+                              Function<String, ValueType> converter) {
             super(shortName, longName, description);
+            this.converter = converter;
         }
 
-        void setValue(String value) {
-            this.value = Optional.of(value);
+        void setRawValue(String value) {
+            this.value = Optional.of(converter.apply(value));
         }
 
-        public String getValue() {
+        public ValueType getValue() {
             assertParsed();
             if (value.isEmpty()) {
                 throw new IllegalStateException("Internal Error");
@@ -71,46 +76,51 @@ public abstract class Flag {
         }
     }
 
-    public static class OptionalFlagWithValue extends Flag implements RequiresValue {
+    public static class OptionalFlagWithValue<ValueType> extends Flag implements RequiresValue<ValueType> {
+        private final Function<String, ValueType> converter;
+        private Optional<ValueType> value = Optional.empty();
 
-        private Optional<String> value = Optional.empty();
-
-        OptionalFlagWithValue(String shortName, Optional<String> longName, String description) {
+        OptionalFlagWithValue(String shortName, Optional<String> longName, String description,
+                              Function<String, ValueType> converter) {
             super(shortName, longName, description);
+            this.converter = converter;
         }
 
-        void setValue(String value) {
-            this.value = Optional.of(value);
+        void setRawValue(String value) {
+            this.value = Optional.of(converter.apply(value));
         }
 
-        public Optional<String> getValue() {
+        public Optional<ValueType> getValue() {
             assertParsed();
             return value;
         }
     }
 
-    public static class OptionalFlagWithDefaultValue extends Flag implements RequiresValue, HasDefaultValue {
-        private final String defaultValue;
-        private String value;
+    public static class OptionalFlagWithDefaultValue<ValueType> extends Flag implements RequiresValue<ValueType>,
+            HasDefaultValue<ValueType> {
+        private final Function<String, ValueType> converter;
+        private final ValueType defaultValue;
+        private ValueType value;
 
         OptionalFlagWithDefaultValue(String shortName, Optional<String> longName,
-                                     String description, String defaultValue) {
+                                     String description, ValueType defaultValue, Function<String, ValueType> converter) {
             super(shortName, longName, description);
+            this.converter = converter;
             this.defaultValue = defaultValue;
             this.value = defaultValue;
         }
 
-        void setValue(String value) {
-            this.value = value;
+        void setRawValue(String value) {
+            this.value = converter.apply(value);
         }
 
-        public String getValue() {
+        public ValueType getValue() {
             assertParsed();
             return value;
         }
 
         @Override
-        public String getDefaultValue() {
+        public ValueType getDefaultValue() {
             return defaultValue;
         }
     }

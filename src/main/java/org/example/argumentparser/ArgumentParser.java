@@ -114,11 +114,11 @@ public class ArgumentParser {
             }
             var flagValue = nextArg.get();
             if (flag instanceof Flag.RequiredFlagWithValue) {
-                ((Flag.RequiredFlagWithValue) flag).setValue(flagValue);
+                ((Flag.RequiredFlagWithValue<?>) flag).setRawValue(flagValue);
             } else if (flag instanceof Flag.OptionalFlagWithValue) {
-                ((Flag.OptionalFlagWithValue) flag).setValue(flagValue);
+                ((Flag.OptionalFlagWithValue<?>) flag).setRawValue(flagValue);
             } else if (flag instanceof Flag.OptionalFlagWithDefaultValue) {
-                ((Flag.OptionalFlagWithDefaultValue) flag).setValue(flagValue);
+                ((Flag.OptionalFlagWithDefaultValue<?>) flag).setRawValue(flagValue);
             } else {
                 throw new IllegalStateException("Internal Error: Unrecognized flag class "
                         + flag.getClass().getSimpleName());
@@ -216,7 +216,7 @@ public class ArgumentParser {
                 .append(isRequired(flag) ? "Required" : "Optional")
                 .append("] ");
         if (hasDefaultValue(flag)) {
-            builder.append("(default=").append(((HasDefaultValue) flag).getDefaultValue()).append(") ");
+            builder.append("(default=").append(((HasDefaultValue<?>) flag).getDefaultValue()).append(") ");
         }
         builder.append(flag.getDescription())
                 .append('\n');
